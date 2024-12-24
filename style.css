@@ -1,0 +1,63 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controls label {
+  font-weight: bold;
+}
+
+.controls input,
+.controls select {
+  padding: 6px;
+  font-size: 14px;
+}
+
+#simulateBtn {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#simulateBtn:hover {
+  background-color: #218838;
+}
+
+.results {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#balanceChart {
+  background: #fff;
+  border: 1px solid #ccc;
+  margin: 0 auto;
+}
