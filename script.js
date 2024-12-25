@@ -1,7 +1,7 @@
 // --------------------------------------------------------------------------
 // Parameter eines Roulette-Spiels:
-// Bei europäischem Roulette gibt es 37 Felder (0-36), wobei Rot/Schwarz
-// jeweils 18 Felder sind und die 0 den Bankvorteil ermöglicht.
+// Europäisches Roulette -> 37 Felder (0–36).
+// Rot/Schwarz je 18 Felder, 0 bringt den Bankvorteil.
 // --------------------------------------------------------------------------
 
 // Globale Variablen (für Chart etc.)
@@ -9,7 +9,7 @@ let chart = null;
 
 /**
  * Simulation einer Roulette-Drehung.
- * Gibt "red", "black", "odd", "even" oder "zero" als Ergebnis zurück.
+ * Gibt "red", "black", "odd", "even" oder "zero" (z. B. "red_odd") zurück.
  */
 function spinRoulette() {
   // Zufallszahl 0 bis 36
@@ -19,10 +19,13 @@ function spinRoulette() {
     return "zero";
   }
 
-  const isRed = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(number);
+  // Wichtige Listen:
+  const reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+  const isRed = reds.includes(number);
   const isOdd = (number % 2 !== 0);
 
-  if (isRed && isOdd) return "red_odd";
+  // Kombinationen: "red_odd", "red_even", "black_odd", "black_even"
+  if (isRed && isOdd)  return "red_odd";
   if (isRed && !isOdd) return "red_even";
   if (!isRed && isOdd) return "black_odd";
   if (!isRed && !isOdd) return "black_even";
@@ -39,7 +42,7 @@ function didWin(outcome, betChoice) {
   if (outcome === "zero") {
     return false;
   }
-  // outcome kann bspw. "red_odd" sein
+  // outcome könnte z. B. "red_odd" sein
   const [color, parity] = outcome.split("_");
   switch (betChoice) {
     case "red":
@@ -56,14 +59,15 @@ function didWin(outcome, betChoice) {
 }
 
 /**
- * Führt eine komplette Simulation durch.
+ * Führt eine komplette Simulation durch, wobei die Drehungen aufhören,
+ * sobald einmal gewonnen wird.
  */
 function runSimulation() {
   // Einlesen der Eingabedaten
   let startingBalance = parseInt(document.getElementById("startingBalance").value, 10);
   let betAmount = parseInt(document.getElementById("betAmount").value, 10);
   const strategy = document.getElementById("strategy").value;
-  const rounds = parseInt(document.getElementById("rounds").value, 10);
+  const maxRounds = parseInt(document.getElementById("rounds").value, 10);
   const betChoice = document.getElementById("betChoice").value;
 
   // Anfangswerte
@@ -72,36 +76,45 @@ function runSimulation() {
   let results = [];
   let totalWins = 0;
   let totalLosses = 0;
+  let roundsPlayed = 0;
 
-  for (let i = 0; i < rounds; i++) {
+  // Wir simulieren so lange, bis maxRounds erreicht oder bis ein Gewinn auftritt
+  for (let i = 0; i < maxRounds; i++) {
+    roundsPlayed++;
     const outcome = spinRoulette();
     const win = didWin(outcome, betChoice);
     
     if (win) {
-      // Bei einer einfachen Chance liegt der Gewinnfaktor bei 1:1 (ohne Zero-Regelungen)
-      balance += currentBet; 
+      // Bei einer einfachen Chance (Rot/Schwarz/Gerade/Ungerade): 1:1-Auszahlung
+      balance += currentBet;
       totalWins++;
+      
       // Strategie-spezifisch
       if (strategy === "martingale") {
-        // Nach Gewinn: Einsatz zurücksetzen
+        // Nach Gewinn Einsatz zurücksetzen
         currentBet = betAmount;
       }
+
+      // *** Ab hier direkt Abbruch nach erstem Gewinn ***
+      results.push(balance);
+      break;  
     } else {
       balance -= currentBet;
       totalLosses++;
-      // Bei Martingale verdoppeln wir nach Verlust den Einsatz
+      
+      // Martingale: Einsatz verdoppeln nach Verlust
       if (strategy === "martingale") {
         currentBet = currentBet * 2;
       }
-      // Achtung: Hier könnte man noch weitere Abbruchbedingungen definieren,
-      // wenn z. B. das Geld ausgeht, um negative Bilanzen zu verhindern.
-      if (balance < 0) {
-        // Stoppen, falls alles verloren ist
+      
+      // Falls das Geld negativ wird, brechen wir ab
+      if (balance <= 0) {
         break;
       }
+
+      // Kontostand für die Chart-Darstellung speichern
+      results.push(balance);
     }
-    // Für das Chart Tracking
-    results.push(balance);
   }
 
   // Ergebniswerte in HTML anzeigen
@@ -111,6 +124,8 @@ function runSimulation() {
     `Gewinne: ${totalWins}`;
   document.getElementById("totalLosses").textContent = 
     `Verluste: ${totalLosses}`;
+  document.getElementById("roundsPlayed").textContent = 
+    `Gespielte Runden: ${roundsPlayed}`;
 
   // Chart zeichnen
   drawChart(results);
@@ -118,7 +133,7 @@ function runSimulation() {
 
 /**
  * Zeichnet den Verlauf des Kontostands als Liniendiagramm.
- * Nutzt Canvas 2D API für ein sehr einfaches Chart.
+ * Nutzt Canvas 2D API für ein einfaches Chart.
  */
 function drawChart(data) {
   // Canvas-Element und Kontext holen
@@ -141,18 +156,16 @@ function drawChart(data) {
 
   // Skalenfaktoren
   const xScale = chartWidth / (data.length - 1);
-  const yScale = (maxVal - minVal) || 1; // Falls maxVal == minVal
+  const yRange = (maxVal - minVal) || 1; // Falls maxVal == minVal
 
-  // Pfad beginnen
   ctx.beginPath();
   ctx.strokeStyle = "#007bff";
   ctx.lineWidth = 2;
 
   data.forEach((value, index) => {
-    // (x, y) Koordinaten berechnen
     const x = padding + index * xScale;
-    // invertierte y-Koordinate, da im Canvas 0 oben ist
-    const y = padding + (maxVal - value) * (chartHeight / yScale);
+    // invertierte y-Koordinate (Canvas 0 = oben)
+    const y = padding + (maxVal - value) * (chartHeight / yRange);
 
     if (index === 0) {
       ctx.moveTo(x, y);
@@ -164,7 +177,5 @@ function drawChart(data) {
   ctx.stroke();
 }
 
-/**
- * Initialisierung
- */
+// Event-Listener für den Start-Button
 document.getElementById("simulateBtn").addEventListener("click", runSimulation);
