@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Roulette Simulation (Stopp nach erstem Gewinn)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Roulette Simulation (Stopp nach erstem Gewinn)</h1>
+    
+    <div class="controls">
+      <label for="startingBalance">Startkapital:</label>
+      <input type="number" id="startingBalance" value="1000" min="0" step="1" />
+
+      <label for="betAmount">Basiseinsatz (bei Flat Betting):</label>
+      <input type="number" id="betAmount" value="10" min="1" step="1" />
+
+      <label for="strategy">Strategie:</label>
+      <select id="strategy">
+        <option value="flat">Flat Betting</option>
+        <option value="martingale">Martingale</option>
+      </select>
+
+      <label for="rounds">Maximale Rundenzahl:</label>
+      <input type="number" id="rounds" value="100" min="1" step="1" />
+
+      <label for="betChoice">Setzwahl (Einfache Chance):</label>
+      <select id="betChoice">
+        <option value="red">Rot</option>
+        <option value="black">Schwarz</option>
+        <option value="odd">Ungerade</option>
+        <option value="even">Gerade</option>
+      </select>
+
+      <button id="simulateBtn">Simulation starten</button>
+    </div>
+
+    <div class="results">
+      <h2>Ergebnisse</h2>
+      <canvas id="balanceChart" width="600" height="300"></canvas>
+      <p id="finalBalance"></p>
+      <p id="totalWins"></p>
+      <p id="totalLosses"></p>
+      <p id="roundsPlayed"></p>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
